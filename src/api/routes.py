@@ -2,7 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User
+from api.models import db, User, Gym
 from api.utils import generate_sitemap, APIException
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -25,11 +25,14 @@ def login():
     checkHashed = hashed.decode("utf-8", "ignore")
 
     checkEmail = User.query.filter_by(email=email).first()
+    gym_id = checkEmail.gym_id
+    myGym = Gym.query.get(gym_id)
+    print(myGym)
 
     
     if checkEmail is not None and bcrypt.checkpw(unSaltPass, checkEmail.password.encode('utf-8')):
         access_token = create_access_token(identity=email)
-        return jsonify(access_token=access_token) 
+        return jsonify(access_token=access_token, user=checkEmail.serialize(), gym=myGym.serialize())
     else: 
         return jsonify({"msg": "Bad username or password"}), 401
 
@@ -55,10 +58,56 @@ def create_user():
     access_token = create_access_token(identity=request_body['email'])
     
 
-    return jsonify(access_token=access_token) 
+    return jsonify(access_token=access_token)
+
+@api.route('/test', methods= ["GET"])
+def get_test():
+    user = User.query.filter_by(email="v").first()
+    print(user.sunday)
+    # all_users_list = list(map(lambda x: x.serialize(), user.sunday))
+    return jsonify(user.sunday)
 
 @api.route('/signup', methods=["GET"])
 def get_user():
     all_users = User.query.all()
     all_users_list = list(map(lambda x: x.serialize(), all_users))
     return jsonify(all_users_list), 200
+
+@api.route('/user/workouts/<string:email>', methods=["POST"])
+@jwt_required()
+def put_workouts(email):
+    request_body= request.get_json()
+    user = User.query.filter_by(email= email).first()
+    user.sunday = request_body["sunday"]
+    user.monday = request_body["monday"]
+    user.tuesday = request_body["tuesday"]
+    user.wednesday = request_body["wednesday"]
+    user.thursday = request_body["thursday"]
+    user.friday = request_body["friday"]
+    user.saturday = request_body["saturday"]
+    
+
+    
+
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify(user.serialize())
+
+@api.route('/user/workouts/<string:email>', methods=["GET"])
+@jwt_required()
+def get_workouts(email):
+    user = User.query.filter_by(email=email).first()
+    sunday = user.sunday
+    monday = user.monday
+    tuesday = user.tuesday
+    wednesday = user.wednesday
+    thursday = user.thursday
+    friday = user.friday
+    saturday = user.saturday
+    return jsonify(sunday, monday, tuesday, wednesday, thursday, friday, saturday)
+
+
+    
+
+    

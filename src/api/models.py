@@ -15,6 +15,13 @@ class User(db.Model):
     pending_friend_requests = db.Column(db.String(80), unique=False)
     sent_friend_requests = db.Column(db.String(80), unique=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+    sunday= db.Column(db.String(80), unique=False, nullable=True)
+    monday= db.Column(db.String(80), unique=False, nullable=True)
+    tuesday= db.Column(db.String(80), unique=False, nullable=True)
+    wednesday= db.Column(db.String(80), unique=False, nullable=True)
+    thursday= db.Column(db.String(80), unique=False, nullable=True)
+    friday= db.Column(db.String(80), unique=False, nullable=True)
+    saturday= db.Column(db.String(80), unique=False, nullable=True)
 
 
     def __repr__(self):
@@ -24,13 +31,22 @@ class User(db.Model):
         return {
             "id": self.id,
             "email": self.email,
-            "gym": self.gym,
+            "gym_id": self.gym_id,
             "first_name": self.first_name,
             "last_name": self.last_name,
             "friends": self.friends,
             "pending_friend_requests": self.pending_friend_requests,
             "sent_friend_requests": self.sent_friend_requests,
-            "is_active": self.is_active
+            "is_active": self.is_active,
+            "sunday": self.sunday,
+            "monday": self.monday,
+            "tuesday": self.tuesday,
+            "wednesday": self.wednesday,
+            "thursday": self.thursday,
+            "friday": self.friday,
+            "saturday": self.saturday
+            
+            
             # do not serialize the password, its a security breach
         }
 
