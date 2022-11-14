@@ -27,12 +27,13 @@ def login():
     checkEmail = User.query.filter_by(email=email).first()
     gym_id = checkEmail.gym_id
     myGym = Gym.query.get(gym_id)
+    gym_string = str(myGym)
     print(myGym)
 
     
     if checkEmail is not None and bcrypt.checkpw(unSaltPass, checkEmail.password.encode('utf-8')):
         access_token = create_access_token(identity=email)
-        return jsonify(access_token=access_token, user=checkEmail.serialize(), gym=myGym.serialize())
+        return jsonify(access_token=access_token, user=checkEmail.serialize(), gym = gym_string)
     else: 
         return jsonify({"msg": "Bad username or password"}), 401
 
