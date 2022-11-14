@@ -77,7 +77,7 @@ class Gym(db.Model):
     events = db.relationship('Event', backref = 'gym')
 
     def __repr__(self):
-        return f'<Gym {self.gym_name}>'
+        return f'<{self.gym_name}>'
 
     def serialize(self):
         return {
