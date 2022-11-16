@@ -25,14 +25,16 @@ def login():
     checkHashed = hashed.decode("utf-8", "ignore")
 
     checkEmail = User.query.filter_by(email=email).first()
-    gym_id = checkEmail.gym_id
-    myGym = Gym.query.get(gym_id)
-    gym_string = str(myGym)
-    print(myGym)
+
+
 
     
     if checkEmail is not None and bcrypt.checkpw(unSaltPass, checkEmail.password.encode('utf-8')):
         access_token = create_access_token(identity=email)
+        gym_id = checkEmail.gym_id
+        myGym = Gym.query.get(gym_id)
+        gym_string = str(myGym)
+        print(myGym)
         return jsonify(access_token=access_token, user=checkEmail.serialize(), gym = gym_string)
     else: 
         return jsonify({"msg": "Bad username or password"}), 401
@@ -46,11 +48,15 @@ def create_user():
     hashed = bcrypt.hashpw(unsaltPass, salt)
     print(unsaltPass)
     print(hashed.decode("utf-8", "ignore"))
+    thisGym = request_body['gym']
+    myGym = Gym.query.filter_by(gym_name = thisGym).first()
+    print(myGym)
     new_user = User(
         email = request_body['email'],
         password = hashed.decode("utf-8", "ignore"),
         first_name = request_body['first_name'],
         last_name = request_body['last_name'],
+        gym = myGym,
         is_active = True
     )
 
@@ -58,8 +64,9 @@ def create_user():
     db.session.commit()
     access_token = create_access_token(identity=request_body['email'])
     
+    
 
-    return jsonify(access_token=access_token)
+    return jsonify(access_token=access_token, user = new_user.serialize())
 
 @api.route('/test', methods= ["GET"])
 def get_test():
