@@ -2,7 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Gym
+from api.models import db, User, Gym, Posting, user_gym
 from api.utils import generate_sitemap, APIException
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -18,24 +18,16 @@ api = Blueprint('api', __name__)
 def login():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
-    unSaltPass = password.encode('utf-8')
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(unSaltPass, salt)
-    
-    checkHashed = hashed.decode("utf-8", "ignore")
 
-    checkEmail = User.query.filter_by(email=email).first()
+    # query db to find user
+    user = User.query.filter_by(email=email).first()
+    access_token = create_access_token(identity=user.email)
+    gym_id = user.gym_id
+    myGym = Gym.query.get(gym_id)
+    gym_string = str(myGym)
+    if bcrypt.checkpw(password.encode(), user.password.encode()):
+        return jsonify(access_token=access_token, user=user.serialize(), gym = gym_string)
 
-
-
-    
-    if checkEmail is not None and bcrypt.checkpw(unSaltPass, checkEmail.password.encode('utf-8')):
-        access_token = create_access_token(identity=email)
-        gym_id = checkEmail.gym_id
-        myGym = Gym.query.get(gym_id)
-        gym_string = str(myGym)
-        print(myGym)
-        return jsonify(access_token=access_token, user=checkEmail.serialize(), gym = gym_string)
     else: 
         return jsonify({"msg": "Bad username or password"}), 401
 
@@ -43,30 +35,32 @@ def login():
 @api.route('/signup', methods=['POST'])
 def create_user():
     request_body = request.get_json()
-    unsaltPass = request_body['password'].encode('utf-8')
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(unsaltPass, salt)
-    print(unsaltPass)
-    print(hashed.decode("utf-8", "ignore"))
-    thisGym = request_body['gym']
-    myGym = Gym.query.filter_by(gym_name = thisGym).first()
-    print(myGym)
+
+    password = request_body['password']
+    email = request_body['email']
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return jsonify({"msg": "An account has already been made with that email address"}), 401
+    hashedPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
     new_user = User(
         email = request_body['email'],
-        password = hashed.decode("utf-8", "ignore"),
+        password = hashedPassword.decode("utf-8", "ignore"),
         first_name = request_body['first_name'],
         last_name = request_body['last_name'],
         gym = myGym,
         is_active = True
     )
-
     db.session.add(new_user)
     db.session.commit()
     access_token = create_access_token(identity=request_body['email'])
+
+    return jsonify(access_token=access_token)
+
     
     
 
-    return jsonify(access_token=access_token, user = new_user.serialize())
+ 
 
 @api.route('/test', methods= ["GET"])
 def get_test():
@@ -115,6 +109,69 @@ def get_workouts(email):
     saturday = user.saturday
     return jsonify(sunday, monday, tuesday, wednesday, thursday, friday, saturday)
 
+@api.route('/post/<string:email>', methods=["POST"])
+def create_post(email):
+    request_body = request.get_json()
+    user = User.query.filter_by(email= email).first()
+    post = Posting(
+        title = request_body['title'],
+        post_info = request_body['content'],
+        user_id = user.id
+    )
+    db.session.add(post)
+    db.session.commit()
+    return jsonify('hello')
+
+@api.route('/post/<string:email>', methods=["GET"])
+def get_posts(email):
+    user = User.query.filter_by(email=email).first()
+    all_user_posts = user.posts
+    all_posts = list(map(lambda x: x.serialize(), all_user_posts))
+    reversedList = all_posts[::-1]
+    return jsonify(reversedList), 200
+
+@api.route('/post', methods=["GET"])
+def get_all_posts():
+    posts = Posting.query.all()
+    all_posts = list(map(lambda x: x.serialize(), posts))
+    return jsonify(all_posts), 200
+
+@api.route('/gym', methods=['POST'])
+def gym_signup():
+    request_body = request.get_json()
+    name = request_body['name']
+    gym = Gym(
+        name=name
+    )
+    db.session.add(gym)
+    db.session.commit()
+    return 'gym added'
+
+@api.route('/gym', methods=["GET"])
+def get_all_gyms():
+    gyms = Gym.query.all()
+    all_gyms = list(map(lambda x: x.serialize(), gyms))
+    return jsonify(all_gyms), 200
+
+@api.route('/follow/<string:email>', methods=["POST"])
+def follow(email):
+    user = User.query.filter_by(email=email).first()
+    gym = Gym(
+        name="hello"
+    )
+    user.following.append(gym)
+    db.session.commit()
+    return 'hello'
+
+@api.route('/follow/gym/<string:email>', methods=["GET"])
+def get_user_gym(email):
+    user = User.query.filter_by(email=email).first()
+    return f'user{user.following}'
+
+@api.route('/gym/followers/<string:name>', methods=["GET"])
+def get_gym_followers(name):
+    gym = Gym.query.filter_by(name=name).first()
+    return f'user{gym.followers}'
 
 @api.route('/user/profiles/<string:gym>', methods=["GET"])
 
@@ -130,4 +187,4 @@ def getGymUsers(gym):
     return jsonify(all_users_list_ser)
 
 
-    
+
