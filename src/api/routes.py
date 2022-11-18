@@ -109,15 +109,15 @@ def create_post(email):
     )
     db.session.add(post)
     db.session.commit()
-    return 'post added'
+    return jsonify('hello')
 
 @api.route('/post/<string:email>', methods=["GET"])
 def get_posts(email):
-    request_body = request.get_json()
     user = User.query.filter_by(email=email).first()
     all_user_posts = user.posts
     all_posts = list(map(lambda x: x.serialize(), all_user_posts))
-    return jsonify(all_posts), 200
+    reversedList = all_posts[::-1]
+    return jsonify(reversedList), 200
 
 @api.route('/post', methods=["GET"])
 def get_all_posts():
@@ -152,7 +152,7 @@ def follow(email):
     db.session.commit()
     return 'hello'
 
-@api.route('/follow/<string:email>', methods=["GET"])
+@api.route('/follow/gym/<string:email>', methods=["GET"])
 def get_user_gym(email):
     user = User.query.filter_by(email=email).first()
     return f'user{user.following}'

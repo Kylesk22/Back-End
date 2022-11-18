@@ -77,7 +77,10 @@ class Posting(db.Model):
         return {
             "id": self.id,
             "user_id": self.user_id,
-            "post_info": self.post_info
+            "email": self.author.email,
+            "date_posted": self.date_posted,
+            "title": self.title,
+            "post_info": self.post_info,
             
             # do not serialize the password, its a security breach
         }
