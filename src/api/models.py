@@ -22,9 +22,11 @@ class User(db.Model):
     friends = db.Column(db.String(80), unique=False)
     pending_friend_requests = db.Column(db.String(80), unique=False)
     sent_friend_requests = db.Column(db.String(80), unique=False)
-    is_active = db.Column(db.Boolean(), unique=False, nullable=False, default='default.jpg')
 
+    image_file = db.Column(db.String(20), nullable=True, default='default.jpg')
+    posts = db.relationship('Posting', backref='author', lazy=True)
     following = db.relationship('Gym', secondary=user_gym, backref='followers')
+    is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
     sunday= db.Column(db.String(80), unique=False, nullable=True)
     monday= db.Column(db.String(80), unique=False, nullable=True)
@@ -88,7 +90,11 @@ class Posting(db.Model):
 class Gym(db.Model):
     __tablename__ = "gym"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), unique = True, nullable= False)
+
+    name = db.Column(db.String(30), unique = True, nullable= True)
+    gym_name = db.Column(db.String(30), unique = True, nullable= True)
+    users = db.relationship('User', backref= 'gym')
+    events = db.relationship('Event', backref = 'gym')
 
 
     def __repr__(self):
@@ -97,7 +103,12 @@ class Gym(db.Model):
     def serialize(self):
         return {
             "id": self.id,
-            "gym_name": self.name,
+
+            "gym_name": self.gym_name,
+            "name": self.name,
+            "users": self.users,
+            "events": self.events
+
             
             # do not serialize the password, its a security breach
         }

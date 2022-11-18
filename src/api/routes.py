@@ -62,12 +62,6 @@ def create_user():
 
  
 
-@api.route('/test', methods= ["GET"])
-def get_test():
-    user = User.query.filter_by(email="v").first()
-    print(user.sunday)
-    # all_users_list = list(map(lambda x: x.serialize(), user.sunday))
-    return jsonify(user.sunday)
 
 @api.route('/signup', methods=["GET"])
 def get_user():
@@ -187,4 +181,71 @@ def getGymUsers(gym):
     return jsonify(all_users_list_ser)
 
 
+
+@api.route('/post/<string:email>', methods=["POST"])
+def create_post(email):
+    request_body = request.get_json()
+    user = User.query.filter_by(email= email).first()
+    post = Posting(
+        title = request_body['title'],
+        post_info = request_body['content'],
+        user_id = user.id
+    )
+    db.session.add(post)
+    db.session.commit()
+    return jsonify('hello')
+
+@api.route('/post/<string:email>', methods=["GET"])
+def get_posts(email):
+    user = User.query.filter_by(email=email).first()
+    all_user_posts = user.posts
+    all_posts = list(map(lambda x: x.serialize(), all_user_posts))
+    reversedList = all_posts[::-1]
+    return jsonify(reversedList), 200
+
+@api.route('/post', methods=["GET"])
+def get_all_posts():
+    posts = Posting.query.all()
+    all_posts = list(map(lambda x: x.serialize(), posts))
+    return jsonify(all_posts), 200
+
+@api.route('/gym', methods=['POST'])
+def gym_signup():
+    request_body = request.get_json()
+    name = request_body['name']
+    gym = Gym(
+        name=name
+    )
+    db.session.add(gym)
+    db.session.commit()
+    return 'gym added'
+
+@api.route('/gym', methods=["GET"])
+def get_all_gyms():
+    gyms = Gym.query.all()
+    all_gyms = list(map(lambda x: x.serialize(), gyms))
+    return jsonify(all_gyms), 200
+
+@api.route('/follow/<string:email>', methods=["POST"])
+def follow(email):
+    user = User.query.filter_by(email=email).first()
+    gym = Gym(
+        name="hello"
+    )
+    user.following.append(gym)
+    db.session.commit()
+    return 'hello'
+
+@api.route('/follow/gym/<string:email>', methods=["GET"])
+def get_user_gym(email):
+    user = User.query.filter_by(email=email).first()
+    return f'user{user.following}'
+
+@api.route('/gym/followers/<string:name>', methods=["GET"])
+def get_gym_followers(name):
+    gym = Gym.query.filter_by(name=name).first()
+    return f'user{gym.followers}'
+
+
+    
 
