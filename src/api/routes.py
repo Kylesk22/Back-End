@@ -116,6 +116,18 @@ def get_workouts(email):
     return jsonify(sunday, monday, tuesday, wednesday, thursday, friday, saturday)
 
 
+@api.route('/user/profiles/<string:gym>', methods=["GET"])
+
+def getGymUsers(gym):
+  
     
+    all_users = Gym.query.all()
+    all_gyms_list = list(map(lambda x: x.serialize(), all_users))
+    all_users_list = all_gyms_list[0]['users']
+    all_users_list_ser = list(map(lambda x: x.serialize(), all_users_list))
+    print(all_users_list_ser)
+    print(all_users_list_ser)
+    return jsonify(all_users_list_ser)
+
 
     
