@@ -1,13 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 
 
 db = SQLAlchemy()
-
-user_gym = db.Table('user_gym',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('gym_id', db.Integer, db.ForeignKey('gym.id'))
-)
 
 class User(db.Model):
     __tablename__ = "user"
@@ -16,18 +10,11 @@ class User(db.Model):
     password = db.Column(db.String(80), unique=False, nullable=False)
     first_name = db.Column(db.String(80), unique=False, nullable=False)
     last_name = db.Column(db.String(80), unique=False, nullable=False)
-    posts = db.relationship('Posting', backref='author', lazy=True)
     gym_id = db.Column(db.Integer, db.ForeignKey('gym.id'))
-    image_file = db.Column(db.String(20), nullable=True, default='default.jpg')
     friends = db.Column(db.String(80), unique=False)
     pending_friend_requests = db.Column(db.String(80), unique=False)
     sent_friend_requests = db.Column(db.String(80), unique=False)
-
-    image_file = db.Column(db.String(20), nullable=True, default='default.jpg')
-    posts = db.relationship('Posting', backref='author', lazy=True)
-    following = db.relationship('Gym', secondary=user_gym, backref='followers')
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
-
     sunday= db.Column(db.String(80), unique=False, nullable=True)
     monday= db.Column(db.String(80), unique=False, nullable=True)
     tuesday= db.Column(db.String(80), unique=False, nullable=True)
@@ -66,23 +53,18 @@ class User(db.Model):
 class Posting(db.Model):
     __tablename__ = "posting"
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(80), unique=False, nullable=False)
     post_info = db.Column(db.String(80), unique=False, nullable=False)
-    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
    
 
     def __repr__(self):
-        return f"Post('{self.title}', '{self.date_posted}')"
+        return f'<Posting {self.id}>'
 
     def serialize(self):
         return {
             "id": self.id,
             "user_id": self.user_id,
-            "email": self.author.email,
-            "date_posted": self.date_posted,
-            "title": self.title,
-            "post_info": self.post_info,
+            "post_info": self.post_info
             
             # do not serialize the password, its a security breach
         }
@@ -90,25 +72,19 @@ class Posting(db.Model):
 class Gym(db.Model):
     __tablename__ = "gym"
     id = db.Column(db.Integer, primary_key=True)
-
-    name = db.Column(db.String(30), unique = True, nullable= True)
-    gym_name = db.Column(db.String(30), unique = True, nullable= True)
+    gym_name = db.Column(db.String(30), unique = True, nullable= False)
     users = db.relationship('User', backref= 'gym')
     events = db.relationship('Event', backref = 'gym')
 
-
     def __repr__(self):
-        return f'<{self.name}>'
+        return f'<{self.gym_name}>'
 
     def serialize(self):
         return {
             "id": self.id,
-
             "gym_name": self.gym_name,
-            "name": self.name,
             "users": self.users,
             "events": self.events
-
             
             # do not serialize the password, its a security breach
         }
@@ -151,7 +127,3 @@ class Event_Posts(db.Model):
             "event_post_data": self.event_post_data,
             "event_id": self.event_id
         }
-
-
-    
-
