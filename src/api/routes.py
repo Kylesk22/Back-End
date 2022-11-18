@@ -18,6 +18,7 @@ api = Blueprint('api', __name__)
 def login():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
+
     # query db to find user
     user = User.query.filter_by(email=email).first()
     access_token = create_access_token(identity=user.email)
@@ -26,6 +27,7 @@ def login():
     gym_string = str(myGym)
     if bcrypt.checkpw(password.encode(), user.password.encode()):
         return jsonify(access_token=access_token, user=user.serialize(), gym = gym_string)
+
     else: 
         return jsonify({"msg": "Bad username or password"}), 401
 
@@ -33,23 +35,32 @@ def login():
 @api.route('/signup', methods=['POST'])
 def create_user():
     request_body = request.get_json()
+
     password = request_body['password']
     email = request_body['email']
     user = User.query.filter_by(email=email).first()
     if user:
         return jsonify({"msg": "An account has already been made with that email address"}), 401
     hashedPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
     new_user = User(
         email = request_body['email'],
         password = hashedPassword.decode("utf-8", "ignore"),
         first_name = request_body['first_name'],
         last_name = request_body['last_name'],
+        gym = myGym,
         is_active = True
     )
     db.session.add(new_user)
     db.session.commit()
     access_token = create_access_token(identity=request_body['email'])
+
     return jsonify(access_token=access_token)
+
+    
+    
+
+ 
 
 @api.route('/test', methods= ["GET"])
 def get_test():
@@ -161,4 +172,19 @@ def get_user_gym(email):
 def get_gym_followers(name):
     gym = Gym.query.filter_by(name=name).first()
     return f'user{gym.followers}'
+
+@api.route('/user/profiles/<string:gym>', methods=["GET"])
+
+def getGymUsers(gym):
+  
+    
+    all_users = Gym.query.all()
+    all_gyms_list = list(map(lambda x: x.serialize(), all_users))
+    all_users_list = all_gyms_list[0]['users']
+    all_users_list_ser = list(map(lambda x: x.serialize(), all_users_list))
+    print(all_users_list_ser)
+    print(all_users_list_ser)
+    return jsonify(all_users_list_ser)
+
+
 
