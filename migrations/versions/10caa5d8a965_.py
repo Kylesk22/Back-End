@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: c6a4fa5518f3
+Revision ID: 10caa5d8a965
 Revises: 
-Create Date: 2022-10-20 03:25:34.978536
+Create Date: 2023-01-25 19:27:53.718406
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'c6a4fa5518f3'
+revision = '10caa5d8a965'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -44,6 +44,13 @@ def upgrade():
     sa.Column('pending_friend_requests', sa.String(length=80), nullable=True),
     sa.Column('sent_friend_requests', sa.String(length=80), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('sunday', sa.String(length=80), nullable=True),
+    sa.Column('monday', sa.String(length=80), nullable=True),
+    sa.Column('tuesday', sa.String(length=80), nullable=True),
+    sa.Column('wednesday', sa.String(length=80), nullable=True),
+    sa.Column('thursday', sa.String(length=80), nullable=True),
+    sa.Column('friday', sa.String(length=80), nullable=True),
+    sa.Column('saturday', sa.String(length=80), nullable=True),
     sa.ForeignKeyConstraint(['gym_id'], ['gym.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
